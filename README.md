@@ -49,7 +49,7 @@ Generate strong random passwords or memorable passphrases directly from the CLI.
 
 ### Build and Install
 ```bash
-git clone https://github.com/tissoni/aura.git
+git clone https://github.com/tissoni/aura-ssh-manager.git
 cd aura
 go build -o aura ./cmd/cmd.go
 sudo cp ./aura /usr/local/bin/aura
