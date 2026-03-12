@@ -25,12 +25,19 @@ Extreme personalization with dark-mode optimized themes:
 - `tokyo-night` (Neon balanced)
 - `nord` (Professional Frost)
 
-### 🚀 **DevOps Snippets**
-Execute common DevOps tasks instantly. Includes pre-loaded snippets for **Docker**, **Kubernetes**, and `systemctl`.
+### 🚀 **DevOps Snippets & SCP**
+Execute common tasks instantly and transfer files securely. Includes snippets for **Docker**, **Kubernetes**, and `systemctl`.
 - `./aura snippets run my-server docker-ps`
+- `./aura scp local-file.txt my-server:/tmp/`
 
-### 📢 **Smart Notifications**
-Get native macOS notifications with high-quality audio feedback when batch tasks (`aura at @tag`) are completed.
+### 📢 **Smart Notifications & Monitoring**
+Get native macOS notifications and real-time health indicators (🟢/🔴) for all your hosts.
+
+### 📦 **Encrypted Backup & Restore**
+Keep your configuration and secrets safe. Aura can export all data to an **AES-GCM** encrypted package with a master password of your choice.
+
+### 🛠️ **Security Utilities**
+Generate strong random passwords or memorable passphrases directly from the CLI.
 
 ---
 
@@ -42,7 +49,7 @@ Get native macOS notifications with high-quality audio feedback when batch tasks
 
 ### Build and Install
 ```bash
-git clone https://github.com/chelo/aura.git
+git clone https://github.com/tissoni/aura.git
 cd aura
 go build -o aura ./cmd/cmd.go
 sudo cp ./aura /usr/local/bin/aura
@@ -57,14 +64,16 @@ sudo cp ./aura /usr/local/bin/aura
 | `aura dash` | Launch the interactive TUI Dashboard |
 | `aura ls` | List all hosts with health status indicators |
 | `aura add` | Interactive flow to add/edit a host |
-| `aura to <host>` | Connect to a specific host (uses Touch ID if saved) |
-| `aura at @tag "ls"` | Execute a command across multiple hosts by tag |
-| `aura theme <name>` | Change the global aesthetic |
+| `aura to <host>` | Connect to a specific host (uses Touch ID) |
+| `aura scp <src> <dst>` | Secure file transfer using Aura config |
+| `aura backup [file]` | Create an encrypted backup of all data |
+| `aura restore [file]` | Restore data from an encrypted backup |
 | `aura snippets ls` | View saved DevOps command snippets |
+| `aura utils gen-pwd` | Generate a strong random password |
 
 ---
 
 ## 💜 Credits
-Aura is a modern fork and complete rewrite of `sshed`, optimized for the macOS ecosystem.
+Aura is based on the excellent work of [sshed](https://github.com/trntv/sshed), but heavily modified and optimized to function **exclusively on macOS**, leveraging native features like Keychain, Touch ID, and System Notifications.
 
 Developed with 💜 for DevOps and SREs who spend their lives in the terminal.
