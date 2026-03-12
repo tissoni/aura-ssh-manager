@@ -289,5 +289,78 @@ func (cmds *Commands) newTunnelsCommand() cli.Command {
 			}
 			return ui.ShowTunnels(mgr)
 		},
+		Subcommands: []cli.Command{
+			{
+				Name:   "add",
+				Usage:  "Add a new port forwarding tunnel",
+				Action: cmds.addTunnelAction,
+			},
+		},
 	}
+}
+
+func (cmds *Commands) addTunnelAction(c *cli.Context) error {
+	mgr := tunnels.NewManager()
+	_ = mgr.Load()
+
+	var qs = []*survey.Question{
+		{
+			Name:     "name",
+			Prompt:   &survey.Input{Message: "Tunnel Name:"},
+			Validate: survey.Required,
+		},
+		{
+			Name:     "local",
+			Prompt:   &survey.Input{Message: "Local Address (e.g. 127.0.0.1:8080):"},
+			Validate: survey.Required,
+		},
+		{
+			Name:     "remote",
+			Prompt:   &survey.Input{Message: "Remote Address (e.g. 127.0.0.1:80):"},
+			Validate: survey.Required,
+		},
+		{
+			Name: "type",
+			Prompt: &survey.Select{
+				Message: "Tunnel Type:",
+				Options: []string{"local", "remote", "dynamic"},
+				Default: "local",
+			},
+		},
+	}
+
+	answers := struct {
+		Name   string
+		Local  string
+		Remote string
+		Type   string
+	}{}
+
+	err := survey.Ask(qs, &answers)
+	if err != nil {
+		return err
+	}
+
+	hostKey, err := cmds.askServerKey()
+	if err != nil {
+		return err
+	}
+
+	id := strings.ToLower(strings.ReplaceAll(answers.Name, " ", "-"))
+	mgr.Add(&tunnels.Tunnel{
+		ID:            id,
+		Name:          answers.Name,
+		HostKey:       hostKey,
+		LocalAddress:  answers.Local,
+		RemoteAddress: answers.Remote,
+		Type:          tunnels.TunnelType(answers.Type),
+	})
+
+	err = mgr.Save()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("\n%s %s\n", theme.StyleSuccess("✓"), "Tunnel added successfully!")
+	return nil
 }

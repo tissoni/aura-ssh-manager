@@ -112,6 +112,19 @@ func (m TunnelModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if ok && i.tunnel.Active {
 				mgr.Stop(i.tunnel.ID)
 			}
+		case "d":
+			i, ok := m.list.SelectedItem().(tunnelItem)
+			if ok {
+				if i.tunnel.Active {
+					mgr.Stop(i.tunnel.ID)
+				}
+				mgr.Remove(i.tunnel.ID)
+				_ = mgr.Save()
+				
+				// Remove from local list and refresh
+				idx := m.list.Index()
+				m.list.RemoveItem(idx)
+			}
 		}
 	}
 
@@ -124,7 +137,7 @@ func (m TunnelModel) View() string {
 	if m.quitting {
 		return ""
 	}
-	return "\n" + m.list.View() + "\n (s) Start tunnel | (x) Stop tunnel | (q) Quit"
+	return "\n" + m.list.View() + "\n (s) Start | (x) Stop | (d) Delete | (q) Quit"
 }
 
 func ShowTunnels(mInstance *tunnels.Manager) error {
