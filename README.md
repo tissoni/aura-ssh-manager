@@ -9,7 +9,9 @@
 ## ✨ Key Features
 
 ### 🖥️ **Aura Dashboard (Interactive TUI)**
-Launch a full-screen interactive dashboard with `./aura dash`. Navigate your hosts, see real-time health status, and connect with a single keypress.
+Launch a full-screen interactive dashboard with `./aura dash`. Navigate your hosts, see real-time health status, connect with a single keypress, or **ping** servers instantly.
+- **🔍 Advanced Fuzzy Search**: Find servers by alias, IP, or tags (e.g., `prod`, `web`, `db`).
+- **🏓 Live Ping**: Press `p` in the dashboard to check ICMP latency to the selected host.
 
 ### 🩺 **Real-time Health Monitoring**
 Stop guessing if your servers are up. Aura performs background TCP health checks and displays status indicators (🟢/🔴) in both the dashboard and host lists.
@@ -17,7 +19,7 @@ Stop guessing if your servers are up. Aura performs background TCP health checks
 ### 🔐 **Native macOS Security**
 - **Keychain Integration**: Securely store passwords and private keys in the macOS System Keychain.
 - **Biometric Auth**: Protect connections with **Touch ID** or system password fallback.
-- **Zero Dependencies**: Pure Go implementation using native PTYs—no more `sshpass`.
+- **SSH Key Deployment**: Easily deploy your public keys to remote servers. Generate new keypairs (ED25519) or use existing ones and append them to `authorized_keys` automatically.
 
 ### 🎨 **Aura Eye Candy (Themes)**
 Extreme personalization with dark-mode optimized themes:
@@ -29,6 +31,7 @@ Extreme personalization with dark-mode optimized themes:
 
 ### 🚀 **DevOps Snippets & SCP**
 Execute common tasks instantly and transfer files securely. Includes snippets for **Docker**, **Kubernetes**, and `systemctl`.
+- **📁 Interactive File Picker**: Run `aura scp` without arguments to launch a visual picker for local files and easy remote path selection.
 - `./aura snippets run my-server docker-ps`
 - `./aura scp local-file.txt my-server:/tmp/`
 
@@ -74,6 +77,8 @@ sudo cp ./aura /usr/local/bin/aura
 | `aura ls` | List all hosts with health status indicators |
 | `aura add` | Interactive flow to add/edit a host |
 | `aura to <host>` | Connect to a specific host (uses Touch ID) |
+| `aura scp` | **NEW**: Launch interactive file picker for transfers |
+| `aura deploy-key` | **NEW**: Generate/deploy SSH keys to remote servers |
 | `aura scp <src> <dst>` | Secure file transfer using Aura config |
 | `aura backup [file]` | Create an encrypted backup of all data |
 | `aura restore [file]` | Restore data from an encrypted backup |

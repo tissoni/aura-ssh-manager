@@ -4,6 +4,10 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"os/exec"
+	"regexp"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -57,6 +61,27 @@ func CheckAll(hosts map[string]string) map[string]Status {
 	return results
 }
 
+var pingRegexp = regexp.MustCompile(`time=([\d.]+) ms`)
+
+func Ping(hostname string) (time.Duration, error) {
+	// Use -c 1 for 1 packet, -W 1 for 1 second timeout
+	out, err := exec.Command("ping", "-c", "1", "-W", "1", hostname).Output()
+	if err != nil {
+		return 0, err
+	}
+
+	match := pingRegexp.FindStringSubmatch(string(out))
+	if len(match) > 1 {
+		ms, err := strconv.ParseFloat(match[1], 64)
+		if err != nil {
+			return 0, err
+		}
+		return time.Duration(ms * float64(time.Millisecond)), nil
+	}
+
+	return 0, nil
+}
+
 type CheckResult struct {
 	Key    string
 	Status Status
@@ -96,4 +121,52 @@ func CheckConcurrent(hosts []struct{Key, Hostname, Port string}) <-chan CheckRes
 	}()
 	
 	return out
+}
+type Diagnostic struct {
+	LoadAvg string
+	MemUsed string
+	MemTotal string
+	DiskUsed string
+	DiskTotal string
+	Uptime   string
+}
+
+func ParseDiagnostic(uptimeOut, freeOut, dfOut string) Diagnostic {
+	d := Diagnostic{}
+	
+	// Parse Uptime & Load (e.g. " 23:58:00 up  4:55,  0 users,  load average: 0.00, 0.01, 0.05")
+	if strings.Contains(uptimeOut, "load average:") {
+		parts := strings.Split(uptimeOut, "load average:")
+		if len(parts) > 1 {
+			d.LoadAvg = strings.TrimSpace(parts[1])
+		}
+		upParts := strings.Split(uptimeOut, "up")
+		if len(upParts) > 1 {
+			d.Uptime = strings.TrimSpace(strings.Split(upParts[1], ",")[0])
+		}
+	}
+
+	// Parse Free (e.g. "Mem:           15821        6328        2523          79        6968        9076")
+	lines := strings.Split(freeOut, "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "Mem:") {
+			fields := strings.Fields(line)
+			if len(fields) >= 3 {
+				d.MemTotal = fields[1] + "MB"
+				d.MemUsed = fields[2] + "MB"
+			}
+		}
+	}
+
+	// Parse DF (e.g. "/dev/sda1        20G  4.5G   15G  24% /")
+	dfLines := strings.Split(dfOut, "\n")
+	if len(dfLines) > 1 {
+		fields := strings.Fields(dfLines[1])
+		if len(fields) >= 4 {
+			d.DiskTotal = fields[1]
+			d.DiskUsed = fields[2]
+		}
+	}
+
+	return d
 }

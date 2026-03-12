@@ -8,6 +8,7 @@ import (
 
 	"github.com/trntv/sshed/ssh"
 	"github.com/trntv/sshed/theme"
+	"github.com/trntv/sshed/ui"
 	"github.com/urfave/cli"
 )
 
@@ -18,13 +19,22 @@ func (cmds *Commands) newSCPCommand() cli.Command {
 		ArgsUsage: "[source] [dest]",
 		Action: func(c *cli.Context) error {
 			if c.NArg() < 2 {
-				fmt.Println(theme.StyleHeader(" AURA SCP USAGE "))
-				fmt.Println("Transfer files using Aura's host configuration and Touch ID security.")
-				fmt.Println("\n" + theme.StyleSecondary("Examples:"))
-				fmt.Println("  ./aura scp local-file.txt do:/root/          " + theme.StyleTag("Upload file"))
-				fmt.Println("  ./aura scp do:/root/backup.tar.gz ./         " + theme.StyleTag("Download file"))
-				fmt.Println("  ./aura scp -r ./folder do:/var/www/          " + theme.StyleTag("Upload directory"))
-				return nil
+				scpArgs, srv, msg, err := ui.ShowFileCopyPicker()
+				if err != nil {
+					return err
+				}
+
+				if msg != "" {
+					fmt.Println(msg)
+				}
+
+				cmd := exec.Command("scp", scpArgs...)
+				// Use RunCommand if we have a primary host for authentication, 
+				// otherwise run directly (e.g. for local-to-local if ever supported)
+				if srv != nil {
+					return cmds.RunCommand(cmd, srv, os.Stdout, os.Stderr)
+				}
+				return cmd.Run()
 			}
 
 			src := c.Args().Get(0)

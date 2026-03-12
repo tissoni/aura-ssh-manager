@@ -48,7 +48,7 @@ func (cmds *Commands) toAction(c *cli.Context) (err error) {
 
 	srv = ssh.Config.Get(key)
 	if srv == nil {
-		return fmt.Errorf(theme.StyleError("host not found"))
+		return fmt.Errorf("%s", theme.StyleError("host not found"))
 	}
 
 	// Interactive "Save Password" flow if missing and no keys are present
@@ -74,7 +74,7 @@ func (cmds *Commands) toAction(c *cli.Context) (err error) {
 				rec.Password = pwd
 				err = keychain.Put(srv.Key, rec)
 				if err != nil {
-					return fmt.Errorf(theme.StyleError("failed to save password to keychain: " + err.Error()))
+					return fmt.Errorf("%s", theme.StyleError("failed to save password to keychain: "+err.Error()))
 				}
 				fmt.Printf("%s\n", theme.StyleSuccess("✓ Securely saved to macOS Keychain. Next time you will be prompted for Touch ID."))
 			}

@@ -105,3 +105,19 @@ func StyleSuccess(s string) string {
 func StyleError(s string) string {
 	return lipgloss.NewStyle().Foreground(lipgloss.Color("#FF5555")).Bold(true).Render(s)
 }
+
+func StyleWarning(s string) string {
+	return lipgloss.NewStyle().Foreground(lipgloss.Color("#FFB86C")).Bold(true).Render(s)
+}
+
+func StyleInfo(s string) string {
+	return lipgloss.NewStyle().Foreground(lipgloss.Color("#F1FA8C")).Render(s)
+}
+
+func StyleTitle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Bold(true).
+		Background(ActiveTheme.Primary).
+		Foreground(ActiveTheme.Foreground).
+		Padding(0, 1)
+}

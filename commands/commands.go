@@ -62,6 +62,7 @@ func RegisterCommands(app *cli.App) {
 		commands.newBackupCommand(),
 		commands.newRestoreCommand(),
 		commands.newSCPCommand(),
+		commands.newDeployKeyCommand(),
 		commands.newUtilsCommand(),
 	}
 }
@@ -84,21 +85,7 @@ func (cmds *Commands) askPassword() string {
 }
 
 func (cmds *Commands) askServerKey() (string, error) {
-	var key string
-	options := make([]string, 0)
-	srvs := ssh.Config.GetAll()
-	for key := range srvs {
-		options = append(options, key)
-	}
-
-	sort.Strings(options)
-	prompt := &survey.Select{
-		Message:  "Choose server:",
-		Options:  options,
-		PageSize: 16,
-	}
-	err := survey.AskOne(prompt, &key, survey.Required)
-
+	key, _, err := ui.SearchHosts("CHOOSE SERVER", false)
 	return key, err
 }
 
@@ -174,11 +161,7 @@ func (cmds *Commands) createCommand(c *cli.Context, srv *host.Host, options *opt
 	}
 
 	if srv.IdentityFile != "" {
-		idFile := ssh.ConvertTilde(srv.IdentityFile)
-		// If it points to a .pub file, try to use the private key instead
-		if strings.HasSuffix(idFile, ".pub") {
-			idFile = strings.TrimSuffix(idFile, ".pub")
-		}
+		idFile := strings.TrimSuffix(ssh.ConvertTilde(srv.IdentityFile), ".pub")
 		args = append(args, fmt.Sprintf("-i %s", idFile))
 	}
 
@@ -222,7 +205,7 @@ func (cmds *Commands) RunCommand(cmd *exec.Cmd, srv *host.Host, stdout io.Writer
 	// Touch ID Verification
 	fmt.Printf("%s\n", theme.StyleSecondary("Authenticating via Touch ID..."))
 	if !keychain.VerifyTouchID() {
-		return fmt.Errorf(theme.StyleError("Touch ID authentication failed"))
+		return fmt.Errorf("%s", theme.StyleError("Touch ID authentication failed"))
 	}
 
 	f, err := pty.Start(cmd)
