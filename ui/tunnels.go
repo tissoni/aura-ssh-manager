@@ -120,12 +120,14 @@ func (m TunnelModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				mgr.Remove(i.tunnel.ID)
 				_ = mgr.Save()
-				
-				// Remove from local list and refresh
+
+				// Remove from local list
 				idx := m.list.Index()
 				m.list.RemoveItem(idx)
 			}
 		}
+	case tea.WindowSizeMsg:
+		m.list.SetSize(msg.Width, msg.Height-4)
 	}
 
 	var cmd tea.Cmd
@@ -137,7 +139,9 @@ func (m TunnelModel) View() string {
 	if m.quitting {
 		return ""
 	}
-	return "\n" + m.list.View() + "\n (s) Start | (x) Stop | (d) Delete | (q) Quit"
+	return "\n" + m.list.View() + "\n " +
+		theme.StyleSecondary("(s) Start | (x) Stop | (d) Delete | (q) Quit") + "\n " +
+		theme.StyleSuccess("Tip: Run 'aura tunnels add' to create a new tunnel")
 }
 
 func ShowTunnels(mInstance *tunnels.Manager) error {
