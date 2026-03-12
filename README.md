@@ -45,11 +45,18 @@ Generate strong random passwords or memorable passphrases directly from the CLI.
 
 ## 🛠️ Installation
 
-### Prerequisites
-- macOS (Intel or Apple Silicon)
-- `go 1.14+` (for building from source)
+### Homebrew (Recommended)
+```bash
+brew install tissoni/tap/aura
+```
 
-### Build and Install
+### Manual / Build from source
+
+#### Prerequisites
+- macOS (Intel or Apple Silicon)
+- `go 1.25+`
+
+#### Build and Install
 ```bash
 git clone https://github.com/tissoni/aura-ssh-manager.git
 cd aura-ssh-manager
