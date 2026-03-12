@@ -3,6 +3,7 @@ package health
 import (
 	"context"
 	"net"
+	"net/http"
 	"time"
 )
 
@@ -12,6 +13,10 @@ const (
 	StatusUp   Status = "up"
 	StatusDown Status = "down"
 )
+
+var httpClient = &http.Client{
+	Timeout: 3 * time.Second,
+}
 
 func Check(hostname, port string) Status {
 	if port == "" {
@@ -24,6 +29,19 @@ func Check(hostname, port string) Status {
 	}
 	conn.Close()
 	return StatusUp
+}
+
+func CheckHTTP(url string) Status {
+	resp, err := httpClient.Get(url)
+	if err != nil {
+		return StatusDown
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 200 && resp.StatusCode < 400 {
+		return StatusUp
+	}
+	return StatusDown
 }
 
 func CheckAll(hosts map[string]string) map[string]Status {

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/trntv/sshed/theme"
+	"github.com/trntv/sshed/ui"
 	"github.com/urfave/cli"
 )
 
@@ -30,6 +31,13 @@ func (cmds *Commands) newUtilsCommand() cli.Command {
 					cli.IntFlag{Name: "words, w", Value: 4, Usage: "Number of words"},
 				},
 				Action: cmds.genPassphraseAction,
+			},
+			{
+				Name:  "ports",
+				Usage: "Find and kill processes on active ports (macOS)",
+				Action: func(c *cli.Context) error {
+					return ui.ShowPortKiller()
+				},
 			},
 		},
 	}

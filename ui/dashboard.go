@@ -24,9 +24,11 @@ var (
 )
 
 type item struct {
-	key      string
-	hostname string
-	status   health.Status
+	key            string
+	hostname       string
+	healthCheckURL string
+	status         health.Status
+	httpStatus     health.Status
 }
 
 func (i item) FilterValue() string { return i.key }
@@ -44,11 +46,23 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 
 	str := fmt.Sprintf("%d. %s", index+1, i.key)
 
-	statusDot := "○"
+	statusDot := lipgloss.NewStyle().Foreground(lipgloss.Color("240")).Render("●")
 	if i.status == health.StatusUp {
 		statusDot = lipgloss.NewStyle().Foreground(lipgloss.Color("#50FA7B")).Render("●")
 	} else if i.status == health.StatusDown {
 		statusDot = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF5555")).Render("●")
+	}
+
+	httpIndicator := ""
+	if i.healthCheckURL != "" {
+		httpIcon := "🌐"
+		httpStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+		if i.httpStatus == health.StatusUp {
+			httpStyle = httpStyle.Foreground(lipgloss.Color("#50FA7B"))
+		} else if i.httpStatus == health.StatusDown {
+			httpStyle = httpStyle.Foreground(lipgloss.Color("#FF5555"))
+		}
+		httpIndicator = " " + httpStyle.Render(httpIcon)
 	}
 
 	var fn func(...string) string
@@ -60,7 +74,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		str = "➜ " + str
 	}
 
-	fmt.Fprintf(w, "%s %s", statusDot, fn(str))
+	fmt.Fprintf(w, "%s%s %s", statusDot, httpIndicator, fn(str))
 }
 
 type Model struct {
@@ -88,6 +102,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			m.quitting = true
 			return m, tea.Quit
+		case "f":
+			// Switch to tunnels (handled in ShowDashboard loop or caller)
+			m.choice = "SWITCH_TO_TUNNELS"
+			return m, tea.Quit
 		case "enter":
 			i, ok := m.list.SelectedItem().(item)
 			if ok {
@@ -106,6 +124,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			srv := ssh.Config.Get(i.key)
 			if srv != nil {
 				i.status = health.Check(srv.Hostname, srv.Port)
+				if i.healthCheckURL != "" {
+					i.httpStatus = health.CheckHTTP(i.healthCheckURL)
+				}
 				items[idx] = i
 			}
 		}
@@ -140,9 +161,11 @@ func ShowDashboard() (string, error) {
 	for _, k := range keys {
 		srv := hosts[k]
 		items = append(items, item{
-			key:      k,
-			hostname: srv.Hostname,
-			status:   health.StatusDown, // Initially down until first tick or parallel check
+			key:            k,
+			hostname:       srv.Hostname,
+			healthCheckURL: srv.HealthCheckURL,
+			status:         health.StatusDown,
+			httpStatus:     health.StatusDown,
 		})
 	}
 

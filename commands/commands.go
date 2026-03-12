@@ -7,6 +7,8 @@ import (
 	"github.com/trntv/sshed/keychain"
 	"github.com/trntv/sshed/ssh"
 	"github.com/trntv/sshed/theme"
+	"github.com/trntv/sshed/tunnels"
+	"github.com/trntv/sshed/ui"
 	"github.com/urfave/cli"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"io"
@@ -56,6 +58,7 @@ func RegisterCommands(app *cli.App) {
 		commands.newIdentitiesCommand(),
 		commands.newSnippetsCommand(),
 		commands.newDashboardCommand(),
+		commands.newTunnelsCommand(),
 		commands.newBackupCommand(),
 		commands.newRestoreCommand(),
 		commands.newSCPCommand(),
@@ -272,4 +275,19 @@ func (cmds *Commands) RunCommand(cmd *exec.Cmd, srv *host.Host, stdout io.Writer
 	}()
 
 	return cmd.Wait()
+}
+
+func (cmds *Commands) newTunnelsCommand() cli.Command {
+	return cli.Command{
+		Name:  "tunnels",
+		Usage: "Manager SSH Port Forwarding Tunnels",
+		Action: func(c *cli.Context) error {
+			mgr := tunnels.NewManager()
+			err := mgr.Load()
+			if err != nil {
+				return err
+			}
+			return ui.ShowTunnels(mgr)
+		},
+	}
 }
