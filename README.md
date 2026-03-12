@@ -1,5 +1,7 @@
 # 🌌 Aura - Modern SSH Manager for macOS
 
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-orange?style=flat-square&logo=buymeacoffee)](https://www.buymeacoffee.com/tissoni)
+
 **Aura** is a premium, high-performance SSH connection manager and TUI dashboard designed exclusively for macOS. It transforms the way you interact with your servers by combining native macOS security with a stunning neon-dark aesthetic.
 
 ---
@@ -50,7 +52,7 @@ Generate strong random passwords or memorable passphrases directly from the CLI.
 ### Build and Install
 ```bash
 git clone https://github.com/tissoni/aura-ssh-manager.git
-cd aura
+cd aura-ssh-manager
 go build -o aura ./cmd/cmd.go
 sudo cp ./aura /usr/local/bin/aura
 ```
