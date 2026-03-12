@@ -1,0 +1,64 @@
+# .goreleaser.yaml configuration for aura-ssh-manager
+# Optimized for macOS (Intel & Apple Silicon) and Homebrew Tap distribution.
+
+version: 2
+
+project_name: aura
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: aura-mac
+    main: ./cmd/cmd.go
+    binary: aura
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.build={{.ShortCommit}}
+
+archives:
+  - id: aura-archive
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format: tar.gz
+    files:
+      - LICENSE
+      - README.md
+      - completions/**/*
+
+checksum:
+  name_template: 'checksums.txt'
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+
+brews:
+  - repository:
+      owner: tissoni
+      name: homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/tissoni/aura-ssh-manager"
+    description: "Aura - Modern SSH Manager for macOS"
+    license: "Apache-2.0"
+    commit_author:
+      name: aura-bot
+      email: aura-bot@users.noreply.github.com
+    install: |
+      bin.install "aura"
+      bash_completion.install "completions/autocomplete.sh" => "aura"
+
+release:
+  github:
+    owner: tissoni
+    name: aura-ssh-manager
