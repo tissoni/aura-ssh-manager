@@ -230,11 +230,24 @@ func askForIdentityFile(answers *answers, srv *host.Host) (err error) {
 		answers.KeyFile = srv.IdentityFile
 		return
 	case OPTION_SELECT:
+		var labels []string
+		for _, k := range ssh.Config.Keys {
+			labels = append(labels, "🔑 "+k)
+		}
+		var selectedLabel string
 		err = survey.AskOne(&survey.Select{
-			Options: ssh.Config.Keys,
+			Options: labels,
 			Message: "Choose private key:",
-			Default: srv.IdentityFile,
-		}, &answers.KeyFile, nil)
+		}, &selectedLabel, nil)
+		if err == nil {
+			// Find the original key by stripping the icon
+			for i, l := range labels {
+				if l == selectedLabel {
+					answers.KeyFile = ssh.Config.Keys[i]
+					break
+				}
+			}
+		}
 	case OPTION_INPUT:
 		err = survey.AskOne(&survey.Input{
 			Message: "Private key path:",

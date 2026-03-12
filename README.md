@@ -23,7 +23,7 @@ Stop guessing if your servers are up. Aura performs background TCP health checks
 
 ### 🎨 **Aura Eye Candy (Themes)**
 Extreme personalization with dark-mode optimized themes:
-- `aura` (Premium Purple/Cyan)
+- `aura` (Purple/Cyan)
 - `deep-space` (Deep Black/Purple)
 - `catppuccin` (Mocha)
 - `tokyo-night` (Neon balanced)

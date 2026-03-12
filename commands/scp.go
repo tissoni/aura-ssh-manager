@@ -62,7 +62,7 @@ func (cmds *Commands) newSCPCommand() cli.Command {
 
 			srv := ssh.Config.Get(hostKey)
 			if srv == nil {
-				return fmt.Errorf(theme.StyleError("host not found: " + hostKey))
+				return fmt.Errorf("host not found: %s", hostKey)
 			}
 
 			// Construct SCP command
@@ -74,9 +74,7 @@ func (cmds *Commands) newSCPCommand() cli.Command {
 			if srv.IdentityFile != "" {
 				idFile := ssh.ConvertTilde(srv.IdentityFile)
 				// If it points to a .pub file, try to use the private key instead
-				if strings.HasSuffix(idFile, ".pub") {
-					idFile = strings.TrimSuffix(idFile, ".pub")
-				}
+				idFile = strings.TrimSuffix(idFile, ".pub")
 				scpArgs = append(scpArgs, "-i", idFile)
 			}
 

@@ -2,6 +2,7 @@ package theme
 
 import (
 	"github.com/charmbracelet/lipgloss"
+	"gopkg.in/AlecAivazis/survey.v1"
 )
 
 type Theme struct {
@@ -16,7 +17,7 @@ type Theme struct {
 
 var Themes = map[string]Theme{
 	"aura": {
-		Name:      "Aura Premium",
+		Name:      "Aura Official",
 		Primary:   lipgloss.Color("#BD93F9"), // Purple
 		Secondary: lipgloss.Color("#8BE9FD"), // Cyan
 		Accent:    lipgloss.Color("#FF79C6"), // Pink
@@ -121,3 +122,15 @@ func StyleTitle() lipgloss.Style {
 		Foreground(ActiveTheme.Foreground).
 		Padding(0, 1)
 }
+
+// GetSurveyTheme returns a custom theme for survey
+func GetSurveyTheme() *SurveyTheme {
+	return &SurveyTheme{}
+}
+
+type SurveyTheme struct {
+	survey.AskOpt
+}
+
+// We will implement icons and colors if we want to customize survey further, 
+// for now we use the default and just style with Aura colors where possible in the strings.

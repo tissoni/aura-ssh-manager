@@ -342,7 +342,7 @@ func ShowDashboard() (string, error) {
 	theme.Init(theme.ActiveTheme.Name)
 
 	l := list.New(items, UnifiedItemDelegate{}, 0, 0)
-	l.Title = " AURA PREMIUM DASHBOARD "
+	l.Title = " AURA DASHBOARD v1.22.0 "
 	l.Styles.Title = lipgloss.NewStyle().
 		Bold(true).
 		Background(theme.ActiveTheme.Primary).

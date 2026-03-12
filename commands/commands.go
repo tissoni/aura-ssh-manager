@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"github.com/creack/pty"
+	"github.com/trntv/sshed/health"
 	"github.com/trntv/sshed/host"
 	"github.com/trntv/sshed/keychain"
 	"github.com/trntv/sshed/ssh"
@@ -17,7 +18,6 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 )
@@ -90,22 +90,51 @@ func (cmds *Commands) askServerKey() (string, error) {
 }
 
 func (cmds *Commands) askServersKeys() ([]string, error) {
-	var keys []string
-	options := make([]string, 0)
-	srvs := ssh.Config.GetAll()
-	for _, h := range srvs {
-		options = append(options, h.Key)
+	_ = ssh.LoadState()
+	items := ui.GetSearchableHosts(false, false)
+	
+	var options []string
+	keys := make(map[string]string)
+	
+	for _, itm := range items {
+		i := itm.(ui.UnifiedHostItem)
+		
+		statusDot := "●"
+		if !i.IsLocal {
+			if i.Status == health.StatusUp {
+				statusDot = theme.StyleSuccess("●")
+			} else if i.Status == health.StatusDown {
+				statusDot = theme.StyleError("●")
+			}
+		}
+
+		fav := ""
+		if i.IsFavorite {
+			fav = "⭐"
+		}
+
+		label := fmt.Sprintf("%s %-2s %s", statusDot, fav, i.Key)
+		options = append(options, label)
+		keys[label] = i.Key
 	}
 
-	sort.Strings(options)
+	var labels []string
 	prompt := &survey.MultiSelect{
 		Message:  "Choose servers:",
 		Options:  options,
 		PageSize: 16,
 	}
-	err := survey.AskOne(prompt, &keys, survey.Required)
+	err := survey.AskOne(prompt, &labels, survey.Required)
+	if err != nil {
+		return nil, err
+	}
 
-	return keys, err
+	var selectedKeys []string
+	for _, l := range labels {
+		selectedKeys = append(selectedKeys, keys[l])
+	}
+
+	return selectedKeys, nil
 }
 
 func (cmds *Commands) createCommand(c *cli.Context, srv *host.Host, options *options, command string) (cmd *exec.Cmd, err error) {

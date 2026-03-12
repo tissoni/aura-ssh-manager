@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -91,13 +92,16 @@ func CheckConcurrent(hosts []struct{Key, Hostname, Port string}) <-chan CheckRes
 	out := make(chan CheckResult, len(hosts))
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	
+	var wg sync.WaitGroup
+	
 	go func() {
 		defer cancel()
-		defer close(out)
 		
 		sem := make(chan struct{}, 10) // Limit concurrency
 		for _, h := range hosts {
+			wg.Add(1)
 			go func(h struct{Key, Hostname, Port string}) {
+				defer wg.Done()
 				sem <- struct{}{}
 				defer func() { <-sem }()
 				
@@ -109,15 +113,8 @@ func CheckConcurrent(hosts []struct{Key, Hostname, Port string}) <-chan CheckRes
 			}(h)
 		}
 		
-		// Wait for all or timeout
-		for i := 0; i < len(hosts); i++ {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				time.Sleep(10 * time.Millisecond)
-			}
-		}
+		wg.Wait()
+		close(out)
 	}()
 	
 	return out

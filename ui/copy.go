@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/bubbles/filepicker"
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/trntv/sshed/host"
 	"github.com/trntv/sshed/ssh"
@@ -61,30 +60,7 @@ func (m CopyModel) View() string {
 // --- Host Selection ---
 
 func askHostUnified(message string) (string, *host.Host, error) {
-	_ = ssh.LoadState()
-	items := GetSearchableHosts(true, false) // Include Local, Alpha sort for SCP
-
-	l := list.New(items, UnifiedItemDelegate{}, 0, 0)
-	l.Title = message
-	l.Styles.Title = theme.StyleTitle() // Shared style
-
-	m := UnifiedHostPickerModel{List: l}
-	p := tea.NewProgram(m, tea.WithAltScreen())
-	res, err := p.Run()
-	if err != nil {
-		return "", nil, err
-	}
-
-	finalModel := res.(UnifiedHostPickerModel)
-	if finalModel.Quitting || finalModel.Choice == "" {
-		return "", nil, fmt.Errorf("cancelled")
-	}
-
-	if finalModel.Choice == "LOCAL" {
-		return "LOCAL", nil, nil
-	}
-
-	return finalModel.Choice, ssh.Config.Get(finalModel.Choice), nil
+	return SearchHosts(message, true)
 }
 
 // --- Main Picker ---
@@ -166,7 +142,7 @@ func ShowFileCopyPicker() ([]string, *host.Host, string, error) {
 
 	// Construct SCP command arguments
 	var args []string
-	
+
 	args = append(args, "-O") // Legacy protocol for better compatibility
 	if isRecursive {
 		args = append(args, "-r")

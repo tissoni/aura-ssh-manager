@@ -14,6 +14,7 @@ import (
 	"github.com/trntv/sshed/host"
 	"github.com/trntv/sshed/ssh"
 	"github.com/trntv/sshed/theme"
+	"gopkg.in/AlecAivazis/survey.v1"
 )
 
 // Shared styles
@@ -107,7 +108,7 @@ func (m UnifiedHostPickerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	case tea.WindowSizeMsg:
-		m.List.SetSize(msg.Width, msg.Height-4)
+		m.List.SetSize(msg.Width, msg.Height-2) // More space for list
 	}
 
 	var cmd tea.Cmd
@@ -126,29 +127,53 @@ func SearchHosts(message string, includeLocal bool) (string, *host.Host, error) 
 	_ = ssh.LoadState()
 	items := GetSearchableHosts(includeLocal, false)
 
-	l := list.New(items, UnifiedItemDelegate{}, 20, 10) // Small default height
-	l.Title = message
-	l.SetShowStatusBar(false)
-	l.SetFilteringEnabled(true)
-	l.Styles.Title = theme.StyleTitle()
+	var options []string
+	keys := make(map[string]string)
+	
+	for _, itm := range items {
+		i := itm.(UnifiedHostItem)
+		
+		statusDot := "●"
+		if !i.IsLocal {
+			if i.Status == health.StatusUp {
+				statusDot = theme.StyleSuccess("●")
+			} else if i.Status == health.StatusDown {
+				statusDot = theme.StyleError("●")
+			}
+		}
 
-	m := UnifiedHostPickerModel{List: l}
-	p := tea.NewProgram(m) // No AltScreen
-	res, err := p.Run()
+		fav := ""
+		if i.IsFavorite {
+			fav = "⭐"
+		}
+
+		label := fmt.Sprintf("%s %-2s %s", statusDot, fav, i.Key)
+		if i.IsLocal {
+			label = fmt.Sprintf("💻 %s", i.Key)
+		}
+		
+		options = append(options, label)
+		keys[label] = i.Key
+	}
+
+	var choice string
+	prompt := &survey.Select{
+		Message:  message + ":",
+		Options:  options,
+		PageSize: 10,
+	}
+
+	err := survey.AskOne(prompt, &choice, survey.Required)
 	if err != nil {
 		return "", nil, err
 	}
 
-	finalModel := res.(UnifiedHostPickerModel)
-	if finalModel.Quitting || finalModel.Choice == "" {
-		return "", nil, fmt.Errorf("cancelled")
-	}
-
-	if finalModel.Choice == "LOCAL" {
+	selectedKey := keys[choice]
+	if selectedKey == "LOCAL" {
 		return "LOCAL", nil, nil
 	}
 
-	return finalModel.Choice, ssh.Config.Get(finalModel.Choice), nil
+	return selectedKey, ssh.Config.Get(selectedKey), nil
 }
 
 func GetSearchableHosts(includeLocal bool, sortByMRU bool) []list.Item {
@@ -169,7 +194,7 @@ func GetSearchableHosts(includeLocal bool, sortByMRU bool) []list.Item {
 			Hostname:       srv.Hostname,
 			HealthCheckURL: srv.HealthCheckURL,
 			Tags:           srv.Tags(),
-			Status:         health.StatusDown,
+			Status:         health.StatusUp,
 		}
 		if ssh.CurrentState != nil {
 			item.IsFavorite = ssh.CurrentState.Favorites[k]
